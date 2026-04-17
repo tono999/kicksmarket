@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="description" content="KickMarket — Mercado de tenis exclusivos">
+<link rel="manifest" href="manifest.json">
+<title>KickMarket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+const stripe = Stripe('pk_test_51TByw2HFcyVh5Ywg6pDDI5yANX7QyDWfnJkVJZ0OetfEzIK2foBv9x2gdrTsJywcX5cNRcUKMZn286uLBu8ZO0Dp00hm2exRfa');
+</script>
+  
+<!-- NAV -->
+<nav>
+  <div class="logo" onclick="scrollToTop()">KICK<span>MARKET</span></div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="showSection('trending')">Trending</button>
+    <button class="nav-btn" onclick="showSection('catalog')">Catálogo</button>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Carrito
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag"> Mercado en vivo · +2,400 tenis disponibles</div>
+  <h1>EL MEJOR<br>PRECIO <span class="accent">GARANTIZADO</span></h1>
+  <p>Compra y vende tenis exclusivos al mejor precio del mercado. Autenticidad verificada en cada par.</p>
+  <div class="hero-cta">
+    <button class="btn-primary" onclick="showSection('catalog')">Explorar Catálogo</button>
+    <button class="btn-outline" onclick="showSection('trending')">Ver Trending</button>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- CATALOG -->
+<section class="section" id="catalog">
+  <div class="section-header">
+    <span class="section-title">Catálogo</span>
+    <span class="section-link" onclick="showAll()">Ver todos</span>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- TRENDING -->
+<section class="section" id="trending" style="padding-top:0">
+  <div class="section-header">
+    <span class="section-title">Trending</span>
+    <span class="section-link">Últimas 24h</span>
+  </div>
+  <div class="table-wrap">
+    <table id="trendingTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Tenis</th><th>Precio actual</th><th>Cambio 24h</th><th>Ventas</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="trendBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="logo">KICK<span>MARKET</span></div>
+    <p>El mercado de tenis más confiable de México y Latinoamérica.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Comprar</h4>
+    <a href="#">Catálogo</a>
+    <a href="#">Tendencias</a>
+    <a href="#">Nuevos lanzamientos</a>
+    <a href="#">Colaboraciones</a>
+  </div>
+  <div class="footer-col">
+    <h4>Vender</h4>
+    <a href="#">Cómo vender</a>
+    <a href="#">Verificación</a>
+    <a href="#">Comisiones</a>
+    <a href="#">Payouts</a>
+  </div>
+  <div class="footer-col">
+    <h4>Soporte</h4>
+    <a href="#">Centro de ayuda</a>
+    <a href="#">Autenticidad</a>
+    <a href="#">Devoluciones</a>
+    <a href="#">Contacto</a>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>© 2025 KickMarket. Todos los derechos reservados.</p>
+  <div class="payments">
+    <span class="pay-badge">Stripe</span>
+    <span class="pay-badge">VISA</span>
+    <span class="pay-badge">MC</span>
+    <span class="pay-badge">AMEX</span>
+    <span class="pay-badge">OXXO</span>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="overlay" id="productOverlay" onclick="closeProductModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-inner">
+      <div class="modal-img" id="modalImg"></div>
+      <div class="modal-info" id="modalInfo"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <span class="cart-title">Tu Carrito</span>
+    <button class="cart-close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter"></div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="checkout-overlay" id="checkoutOverlay">
+  <div class="checkout-modal">
+    <div class="checkout-header">
+      <div>
+        <div class="stripe-logo">stripe</div>
+        <h2>Pago seguro</h2>
+      </div>
+      <div style="margin-left:auto; font-size:28px;">🔒</div>
+    </div>
+    <div class="checkout-body">
+      <div class="card-icons">
+        <span class="card-icon">VISA</span>
+        <span class="card-icon">MC</span>
+        <span class="card-icon">AMEX</span>
+        <span class="card-icon">AMEX</span>
+      </div>
+      <div class="form-group">
+        <label>Número de tarjeta</label>
+        <input type="text" id="cardNum" placeholder="4242 4242 4242 4242" maxlength="19" oninput="formatCard(this)">
+      </div>
+      <div class="form-group">
+        <label>Titular</label>
+        <input type="text" id="cardName" placeholder="Nombre completo">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vencimiento</label>
+          <input type="text" id="cardExp" placeholder="MM / AA" maxlength="7" oninput="formatExp(this)">
+        </div>
+        <div class="form-group">
+          <label>CVC</label>
+          <input type="text" id="cardCvc" placeholder="123" maxlength="3">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="cardEmail" placeholder="tu@email.com">
+      </div>
+      <div class="secure-note">
+         <span>Tus datos están cifrados con TLS 1.3. Procesado por Stripe.</span>
+      </div>
+      <div id="checkoutTotal" style="margin-bottom:20px; font-family:'Bebas Neue',sans-serif; font-size:24px; text-align:center;"></div>
+      <a href="https://buy.stripe.com/test_dRm14n0Ucd4Qd9w46n0x200"><button class="btn-pay">comprar</button></a>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="success-modal" id="successModal">
+  <div class="success-inner">
+    <div class="success-icon">✓</div>
+    <h2>¡Pago exitoso!</h2>
+    <p>Tu pedido ha sido confirmado y será autenticado en nuestro centro de verificación antes del envío.</p>
+    <div class="order-id">
+      <div class="order-id-label">Número de orden</div>
+      <div class="order-id-val" id="orderIdVal">#KM-000000</div>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:20px;">Recibirás un email de confirmación con tu número de rastreo en 24–48 hrs.</p>
+    <button class="btn-primary" onclick="closeSuccess()" style="width:100%">Seguir comprando</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="dot"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- PWA BANNER -->
+<div class="pwa-banner" id="pwaBanner">
+  <h4>📱 Instalar KickMarket</h4>
+  <p>Agrega la app a tu pantalla de inicio para acceso rápido.</p>
+  <div class="pwa-banner-btns">
+    <button class="pwa-install" onclick="installPWA()">Instalar</button>
+    <button class="pwa-dismiss" onclick="dismissPWA()">Ahora no</button>
+  </div>
+</div>
+
+<script>
+// =====================
+// DATA
+// =====================
+const products = [
+  { id:1, brand:'Nike', name:'Air Jordan 1 Retro High OG "Chicago"', sku:'DZ5485-612', img:'https://images.stockx.com/360/Air-Jordan-1-Retro-High-OG-Chicago-Reimagined/Images/Air-Jordan-1-Retro-High-OG-Chicago-Reimagined/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:8500, retail:3200, category:'Jordan', badge:'Hot', sold:[6,7,8,8.5,9,10,11], allSizes:[6,7,7.5,8,8.5,9,9.5,10,10.5,11,12], sales:312, change:+8.4 },
+  { id:2, brand:'Nike', name:'Nike Dunk Low Retro "Panda"', sku:'DD1391-100', img:'https://images.stockx.com/360/Nike-Dunk-Low-Retro-White-Black-Panda-2021/Images/Nike-Dunk-Low-Retro-White-Black-Panda-2021/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:2800, retail:1800, category:'Nike', badge:'', sold:[7,8,11,12], allSizes:[6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12], sales:891, change:+2.1 },
+  { id:3, brand:'New Balance', name:'New Balance 550 "White Green"', sku:'BB550WT1', img:'https://images.stockx.com/360/New-Balance-550-White-Green/Images/New-Balance-550-White-Green/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:2200, retail:1600, category:'New Balance', badge:'New', sold:[6,6.5,12], allSizes:[6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,12], sales:445, change:+5.6 },
+  { id:4, brand:'Adidas', name:'Adidas Yeezy Boost 350 V2 "Zebra"', sku:'CP9654', img:'https://images.stockx.com/360/adidas-Yeezy-Boost-350-V2-Zebra/Images/adidas-Yeezy-Boost-350-V2-Zebra/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:5500, retail:2900, category:'Adidas', badge:'Hot', sold:[7,7.5,10,10.5], allSizes:[6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,12.5,13], sales:278, change:-1.2 },
+  { id:5, brand:'Nike', name:'Nike Air Max 1 "Anniversary Red"', sku:'908375-103', img:'https://images.stockx.com/360/Nike-Air-Max-1-Anniversary-Red-2017/Images/Nike-Air-Max-1-Anniversary-Red-2017/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:4200, retail:2200, category:'Nike', badge:'', sold:[8.5,9.5,11.5], allSizes:[7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12], sales:156, change:+3.8 },
+  { id:6, brand:'Nike', name:'Air Jordan 4 Retro "Military Blue"', sku:'DH6927-111', img:'https://images.stockx.com/360/Air-Jordan-4-Retro-Military-Blue-2024/Images/Air-Jordan-4-Retro-Military-Blue-2024/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:6800, retail:3400, category:'Jordan', badge:'New', sold:[6,6.5,12,13], allSizes:[6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12,13], sales:203, change:+12.3 },
+  { id:7, brand:'New Balance', name:'New Balance 9060 "Mushroom"', sku:'U9060MGB', img:'https://images.stockx.com/360/New-Balance-9060-Mushroom-Grey-Beige/Images/New-Balance-9060-Mushroom-Grey-Beige/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:3100, retail:1800, category:'New Balance', badge:'', sold:[7,7.5,11], allSizes:[6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12], sales:334, change:+6.7 },
+  { id:8, brand:'Adidas', name:'Adidas Samba OG "White Gum"', sku:'B75806', img:'https://images.stockx.com/360/adidas-Samba-OG-White-Gum-Core-Black/Images/adidas-Samba-OG-White-Gum-Core-Black/Lv2/img01.jpg?fm=webp&auto=compress&w=576&q=90', price:1900, retail:1400, category:'Adidas', badge:'New', sold:[7.5,8,10.5], allSizes:[6,6.5,7,7.5,8,8.5,9,9.5,10,10.5,11,11.5,12], sales:712, change:+9.1 },
+];
+
+const categories = ['Todos', 'Nike', 'Jordan', 'Adidas', 'New Balance'];
+let activeCategory = 'Todos';
+let cart = [];
+let selectedSize = null;
+let currentProduct = null;
+let deferredPrompt = null;
+
+// =====================
+// TICKER
+// =====================
+function buildTicker() {
+  const items = products.map(p =>
+    `<div class="ticker-item">${p.brand} ${p.name.split(' ').slice(0,3).join(' ')} — <span class="${p.change>0?'up':'dn'}">${p.change>0?'+':''}${p.change}%</span></div>`
+  );
+  const double = [...items,...items];
+  document.getElementById('tickerTrack').innerHTML = double.join('');
+}
+
+// =====================
+// FILTERS & GRID
+// =====================
+function buildFilters() {
+  const f = document.getElementById('filters');
+  f.innerHTML = categories.map(c =>
+    `<button class="filter-btn ${c===activeCategory?'active':''}" onclick="setCategory('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setCategory(c) {
+  activeCategory = c;
+  buildFilters();
+  buildGrid();
+}
+
+function buildGrid() {
+  const filtered = activeCategory==='Todos' ? products : products.filter(p=>p.category===activeCategory);
+  const g = document.getElementById('grid');
+  g.innerHTML = filtered.map(p => `
+    <div class="card" onclick="openProduct(${p.id})">
+      <div class="card-img">
+        ${p.badge?`<span class="card-badge ${p.badge==='New'?'new':''}">${p.badge}</span>`:''}
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><text y=%2250%22 font-size=%2240%22>👟</text></svg>'">
+      </div>
+      <div class="card-body">
+        <div class="card-brand">${p.brand}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-footer">
+          <div>
+            <div class="card-price-label">Precio Mínimo</div>
+            <div class="card-price">$${p.price.toLocaleString()}</div>
+            <div class="card-retail">Retail: $${p.retail.toLocaleString()}</div>
+          </div>
+          <button class="card-wishlist" onclick="event.stopPropagation(); toggleWish(this)">♡</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleWish(btn) {
+  btn.classList.toggle('active');
+  btn.textContent = btn.classList.contains('active') ? '♥' : '♡';
+  showToast(btn.classList.contains('active') ? 'Agregado a favoritos' : 'Eliminado de favoritos');
+}
+
+// =====================
+// TRENDING TABLE
+// =====================
+function buildTrending() {
+  const sorted = [...products].sort((a,b) => Math.abs(b.change)-Math.abs(a.change));
+  document.getElementById('trendBody').innerHTML = sorted.map((p,i) => `
+    <tr>
+      <td style="color:var(--muted); font-size:13px;">${i+1}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="background:var(--bg3); border-radius:8px; width:44px; height:44px; padding:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+            <img src="${p.img}" style="width:100%; object-fit:contain;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2230%22 height=%2230%22><text y=%2224%22 font-size=%2224%22>👟</text></svg>'">
+          </div>
+          <div>
+            <div class="trend-name">${p.name.substring(0,32)}${p.name.length>32?'…':''}</div>
+            <div style="font-size:11px; color:var(--muted);">${p.sku}</div>
+          </div>
+        </div>
+      </td>
+      <td><span style="font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--accent);">$${p.price.toLocaleString()}</span></td>
+      <td><span class="trend-change ${p.change>0?'up':'dn'}">${p.change>0?'+':''}${p.change}%</span></td>
+      <td style="color:var(--muted);">${p.sales.toLocaleString()}</td>
+      <td><button class="trend-buy" onclick="openProduct(${p.id})">Comprar</button></td>
+    </tr>
+  `).join('');
+}
+
+// =====================
+// PRODUCT MODAL
+// =====================
+function openProduct(id) {
+  currentProduct = products.find(p=>p.id===id);
+  selectedSize = null;
+  if(!currentProduct) return;
+  const p = currentProduct;
+  const premium = Math.round((p.price - p.retail) / p.retail * 100);
+
+  document.getElementById('modalImg').innerHTML = `
+    <img src="${p.img}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22><text y=%2290%22 font-size=%2280%22>👟</text></svg>'">
+  `;
+  document.getElementById('modalInfo').innerHTML = `
+    <div class="modal-brand">${p.brand}</div>
+    <div class="modal-name">${p.name}</div>
+    <div class="modal-sku">SKU: ${p.sku}</div>
+    <div class="modal-prices">
+      <div class="modal-price">$${p.price.toLocaleString()}</div>
+      <div class="modal-retail-box">
+        <span class="modal-retail-label">Precio Retail</span>
+        <span class="modal-retail">$${p.retail.toLocaleString()}</span>
+        <span class="modal-premium">+${premium}% premium</span>
+      </div>
+    </div>
+    <div class="sizes-label">Selecciona tu talla (US)</div>
+    <div class="sizes">
+      ${p.allSizes.map(s => `
+        <button class="size-btn ${p.sold.includes(s)?'sold':''}" data-size="${s}" onclick="selectSize(this, ${s})">${s}</button>
+      `).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-buy" onclick="addToCart()">Agregar al carrito</button>
+      <button class="btn-bid" onclick="showToast('Función de oferta próximamente')">Hacer oferta</button>
+    </div>
+    <div class="modal-stats">
+      <div class="stat"><span class="stat-label">Ventas 24h</span><span class="stat-val">${p.sales}</span></div>
+      <div class="stat"><span class="stat-label">Cambio 24h</span><span class="stat-val" style="color:${p.change>0?'#4ade80':'var(--accent2)'}">${p.change>0?'+':''}${p.change}%</span></div>
+      <div class="stat"><span class="stat-label">Precio más bajo</span><span class="stat-val">$${p.price.toLocaleString()}</span></div>
+      <div class="stat"><span class="stat-label">Precio más alto</span><span class="stat-val">$${Math.round(p.price*1.15).toLocaleString()}</span></div>
+    </div>
+  `;
+  document.getElementById('productOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function selectSize(btn, size) {
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedSize = size;
+}
+
+function addToCart() {
+  if(!selectedSize) { showToast(' Selecciona una talla primero'); return; }
+  const p = currentProduct;
+  const existing = cart.find(i=>i.id===p.id && i.size===selectedSize);
+  if(existing) { showToast('Ya está en tu carrito'); return; }
+  cart.push({ ...p, size: selectedSize });
+  updateCartCount();
+  closeModal();
+  showToast(`✓ ${p.name.split(' ').slice(0,4).join(' ')} — Talla ${selectedSize} agregado`);
+}
+
+function closeProductModal(e) {
+  if(e.target.id==='productOverlay') closeModal();
+}
+function closeModal() {
+  document.getElementById('productOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// =====================
+// CART
+// =====================
+function openCart() {
+  renderCart();
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function updateCartCount() {
+  document.getElementById('cartCount').textContent = cart.length;
+}
+function removeFromCart(idx) {
+  cart.splice(idx,1);
+  updateCartCount();
+  renderCart();
+}
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  const foot = document.getElementById('cartFooter');
+  if(cart.length===0) {
+    el.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">👟</div><p style="color:var(--muted)">Tu carrito está vacío.<br>¡Encuentra tu próximo par!</p></div>`;
+    foot.innerHTML = '';
+    return;
+  }
+  el.innerHTML = cart.map((item,i) => `
+    <div class="cart-item">
+      <div class="cart-item-img">
+        <img src="${item.img}" alt="${item.name}" onerror="this.parentNode.textContent='👟'">
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-size">Talla US ${item.size} · ${item.brand}</div>
+        <div class="cart-item-price">$${item.price.toLocaleString()}</div>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart(${i})">✕</button>
+    </div>
+  `).join('');
+  const subtotal = cart.reduce((s,i)=>s+i.price,0);
+  const envio = 299;
+  const total = subtotal + envio;
+  document.getElementById('checkoutTotal').textContent = `Total: $${total.toLocaleString()} MXN`;
+  foot.innerHTML = `
+    <div class="cart-summary">
+      <div class="cart-row"><span>Subtotal (${cart.length} artículo${cart.length!==1?'s':''})</span><span>$${subtotal.toLocaleString()}</span></div>
+      <div class="cart-row"><span>Envío asegurado</span><span>$${envio}</span></div>
+      <div class="cart-row"><span>Autenticación</span><span>Gratis</span></div>
+    </div>
+    <div class="cart-total"><span>Total</span><span>$${total.toLocaleString()} MXN</span></div>
+    <br>
+    <button class="btn-checkout" onclick="openCheckout()">
+       Pagar con Stripe
+    </button>
+    <div class="stripe-badge">
+      <span class="stripe-icon">⚡</span>
+      Pago 100% seguro • Cifrado SSL
+    </div>
+  `;
+}
+
+// =====================
+// CHECKOUT
+// =====================
+function openCheckout() {
+  if(cart.length===0) return;
+  document.getElementById('checkoutOverlay').classList.add('open');
+}
+function closeCheckout() {
+  document.getElementById('checkoutOverlay').classList.remove('open');
+}
+function formatCard(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExp(input) {
+  let v = input.value.replace(/\D/g,'');
+  if(v.length>=2) v = v.substring(0,2)+' / '+v.substring(2,4);
+  input.value = v;
+}
+async function processPayment() {
+  console.log("INTENTANDO PAGO REAL");
+
+  const subtotal = cart.reduce((s,i)=>s+i.price,0);
+  const envio = 299;
+  const total = subtotal + envio;
+
+  try {
+    const response = await fetch('http://localhost:3000/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: total * 100 })
+    });
+
+    const session = await response.json();
+    console.log("SESSION:", session);
+
+    await stripe.redirectToCheckout({
+      sessionId: session.id,
+    });
+
+  } catch (err) {
+    console.error("ERROR:", err);
+  }
+}
+
+// =====================
+// TOAST
+// =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// =====================
+// NAV HELPERS
+// =====================
+function scrollToTop() { window.scrollTo({top:0, behavior:'smooth'}); }
+function showSection(id) { document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+function showAll() { setCategory('Todos'); }
+
+// =====================
+// PWA
+// =====================
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(()=>document.getElementById('pwaBanner').classList.add('show'), 3000);
+});
+function installPWA() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; dismissPWA(); });
+  }
+  dismissPWA();
+}
+function dismissPWA() { document.getElementById('pwaBanner').classList.remove('show'); }
+
+// =====================
+// INIT
+// =====================
+buildTicker();
+buildFilters();
+buildGrid();
+buildTrending();
+
+// Service Worker
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+
+</script>
+</body>
+</html>

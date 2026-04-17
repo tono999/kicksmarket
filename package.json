@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "express": "^5.2.1",
+    "stripe": "^22.0.1"
+  },
+  "name": "kickmarcket",
+  "version": "1.0.0",
+  "description": "Mercado de compra/venta de tenis tipo StockX, construido como PWA (Progressive Web App) con integración de Stripe para pagos.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
