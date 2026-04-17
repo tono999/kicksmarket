@@ -148,37 +148,6 @@ const stripe = Stripe('pk_test_51TByw2HFcyVh5Ywg6pDDI5yANX7QyDWfnJkVJZ0OetfEzIK2
       <div style="margin-left:auto; font-size:28px;">🔒</div>
     </div>
     <div class="checkout-body">
-      <div class="card-icons">
-        <span class="card-icon">VISA</span>
-        <span class="card-icon">MC</span>
-        <span class="card-icon">AMEX</span>
-        <span class="card-icon">AMEX</span>
-      </div>
-      <div class="form-group">
-        <label>Número de tarjeta</label>
-        <input type="text" id="cardNum" placeholder="4242 4242 4242 4242" maxlength="19" oninput="formatCard(this)">
-      </div>
-      <div class="form-group">
-        <label>Titular</label>
-        <input type="text" id="cardName" placeholder="Nombre completo">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Vencimiento</label>
-          <input type="text" id="cardExp" placeholder="MM / AA" maxlength="7" oninput="formatExp(this)">
-        </div>
-        <div class="form-group">
-          <label>CVC</label>
-          <input type="text" id="cardCvc" placeholder="123" maxlength="3">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="cardEmail" placeholder="tu@email.com">
-      </div>
-      <div class="secure-note">
-         <span>Tus datos están cifrados con TLS 1.3. Procesado por Stripe.</span>
-      </div>
       <div id="checkoutTotal" style="margin-bottom:20px; font-family:'Bebas Neue',sans-serif; font-size:24px; text-align:center;"></div>
       <a href="https://buy.stripe.com/7sY3cvbz17R44Hndsu48000"><button class="btn-pay">comprar</button></a>
     </div>
